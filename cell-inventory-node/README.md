@@ -3,7 +3,7 @@
 Mobile phone shop ke liye OOP project: products, inventory, purchases, sales, customers, suppliers,
 invoices aur reports. **Backend:** Node.js + Express + SQLite. **GUI:** plain HTML/CSS/JavaScript (browser mein khulti hai).
 
-**Team:** Rukhsar Rasheed & Rabia Noreen - BSCS 2nd Semester - Instructor: Sir Mohsin Ali Solangi
+**Team:** Rukhsar Rasheed & Muhammad Ans - BSCS 2nd Semester - Instructor: Sir Mohsin Ali Solangi
 
 ## 1. Chalane ka tareeqa (VS Code)
 
