@@ -117,29 +117,82 @@ async function route() {
 window.addEventListener('hashchange', route);
 
 // ================================================================ dashboard
+// ================================================================ dashboard
 async function dashboardView(main) {
   const d = await api('GET', '/dashboard');
-  const max = Math.max(1, ...d.last7.map((x) => x.total));
-  main.innerHTML = head('Dashboard', `Welcome, ${user.fullName} - here is how the shop is doing today.`) + `
+
+  const today = d.today || {};
+  const products = d.products || {};
+  const last7 = Array.isArray(d.sales_chart) ? d.sales_chart : [];
+
+  const max = Math.max(1, ...last7.map((x) => Number(x.total) || 0));
+
+  main.innerHTML = head(
+    'Dashboard',
+    `Welcome, ${user.fullName} - here is how the shop is doing today.`
+  ) + `
   <div class="stats">
-    <div class="card stat"><small>Today's Sales</small><b class="c-green">${money(d.salesToday)}</b></div>
-    <div class="card stat"><small>Invoices Today</small><b class="c-blue">${d.invoicesToday}</b></div>
-    <div class="card stat"><small>Today's Profit</small><b class="c-purple">${money(d.profitToday)}</b></div>
-    <div class="card stat"><small>Products</small><b class="c-blue">${d.productCount}</b></div>
-    <div class="card stat"><small>Low Stock Items</small><b class="${d.lowStockCount ? 'c-red' : 'c-green'}">${d.lowStockCount}</b></div>
-    <div class="card stat"><small>Stock Value</small><b class="c-orange">${money(d.stockValue)}</b></div>
+    <div class="card stat">
+      <small>Today's Sales</small>
+      <b class="c-green">${money(today.revenue || 0)}</b>
+    </div>
+
+    <div class="card stat">
+      <small>Invoices Today</small>
+      <b class="c-blue">${today.transactions || 0}</b>
+    </div>
+
+    <div class="card stat">
+      <small>Today's Discounts</small>
+      <b class="c-purple">${money(today.discounts || 0)}</b>
+    </div>
+
+    <div class="card stat">
+      <small>Products</small>
+      <b class="c-blue">${products.total_products || 0}</b>
+    </div>
+
+    <div class="card stat">
+      <small>Low Stock Items</small>
+      <b class="${products.low_stock ? 'c-red' : 'c-green'}">
+        ${products.low_stock || 0}
+      </b>
+    </div>
+
+    <div class="card stat">
+      <small>Stock Value</small>
+      <b class="c-orange">${money(products.stock_value || 0)}</b>
+    </div>
   </div>
+
   <div class="grid2">
-    <div class="card"><h3>Sales - last 7 days</h3><div class="bars">${d.last7.map((x) =>
-      `<div class="bar" title="${esc(x.date)}: ${money(x.total)}"><em>${x.total ? num0(x.total) : ''}</em><i style="height:${Math.max(1, (x.total / max) * 150)}px"></i>${esc(x.date.slice(5))}</div>`).join('')}</div></div>
+    <div class="card">
+      <h3>Sales - Last 7 Days</h3>
+      <div class="bars">
+        ${last7.map((x) => {
+          const total = Number(x.total) || 0;
+          return `
+            <div class="bar" title="${esc(x.date)}: ${money(total)}">
+              <em>${total ? num0(total) : ''}</em>
+              <i style="height:${Math.max(1, (total / max) * 150)}px"></i>
+              ${esc(x.date.slice(5))}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
     <div class="stack">
-      <div class="card"><h3>Low-stock alerts</h3>${table([{ h: 'Product', v: (p) => esc(p.name) }, { h: 'Stock', v: (p) => p.quantity, num: true }, { h: 'Min', v: (p) => p.min_stock, num: true }],
-        d.lowStock, { empty: 'All products are sufficiently stocked.' })}</div>
-      <div class="card"><h3>Recent sales</h3>${table([{ h: 'Invoice', v: (s) => s.number }, { h: 'Customer', v: (s) => esc(s.customer) }, { h: 'Total', v: (s) => money(s.total), num: true }],
-        d.recentSales, { empty: 'No sales yet.' })}</div>
+      <div class="card">
+        <h3>Inventory Summary</h3>
+        <p>Total Stock Units: <b>${products.total_units || 0}</b></p>
+        <p>Customers: <b>${d.customers || 0}</b></p>
+        <p>Today's Purchases: <b>${money(d.purchases_today || 0)}</b></p>
+      </div>
     </div>
   </div>`;
 }
+
 
 // ================================================================ products
 async function productsView(main) {
